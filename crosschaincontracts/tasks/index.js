@@ -1,0 +1,1 @@
+task("getContractBalance", "", require("./GetContractBalance"));
