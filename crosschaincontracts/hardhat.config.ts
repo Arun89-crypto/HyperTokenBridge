@@ -3,19 +3,19 @@ import "@nomicfoundation/hardhat-toolbox";
 require("dotenv").config();
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.18",
+  solidity: "0.8.9",
   networks: {
     hardhat: {},
-    mainnet: {
-      url: process.env.ETHEREUM_MAINNET_URL,
+    goerli: {
+      url: process.env.ETH_GOERLI_RPC_URL,
       accounts: {
-        mnemonic: process.env.MNEMONIC_MAINNET,
+        mnemonic: process.env.PRIVATE_KEY,
       },
     },
-    ropsten: {
-      url: process.env.ETHEREUM_ROPSTEN_URL,
+    mumbai: {
+      url: process.env.POL_MUMBAI_RPC_URL,
       accounts: {
-        mnemonic: process.env.MNEMONIC_ROPSTEN,
+        mnemonic: process.env.PRIVATE_KEY,
       },
     },
   },

@@ -9,14 +9,19 @@ pragma abicoder v2;
 
 // IMPORTS
 import "./NonblockingLzApp.sol";
+// [FOR REMIX] import "https://github.com/LayerZero-Labs/solidity-examples/blob/main/contracts/lzApp/NonblockingLzApp.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "@uniswap/v3-core/contracts/libraries/FixedPoint96.sol";
+import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TokenBridgeHyper is Ownable, NonblockingLzApp {
     ISwapRouter public immutable swapRouter;
-    AggregatorV3Interface internal priceFeed;
+    IUniswapV3Factory public immutable uniswapV3Factory;
     address public priceFeedAddress;
     address public stableAssetAddressUSDC;
     address public wrappedAssetAddressNative;
@@ -30,14 +35,14 @@ contract TokenBridgeHyper is Ownable, NonblockingLzApp {
     constructor(
         address _endpoint,
         ISwapRouter _swapRouter,
-        address _priceFeedAddress,
         address _stableAssetAddressUSDC,
-        address _wrappedAssetAddressNative
+        address _wrappedAssetAddressNative,
+        IUniswapV3Factory _uniswapV3Factory
     ) NonblockingLzApp(_endpoint) {
         swapRouter = _swapRouter;
-        priceFeedAddress = _priceFeedAddress;
         stableAssetAddressUSDC = _stableAssetAddressUSDC;
         wrappedAssetAddressNative = _wrappedAssetAddressNative;
+        uniswapV3Factory = _uniswapV3Factory;
     }
 
     /**
@@ -105,6 +110,8 @@ contract TokenBridgeHyper is Ownable, NonblockingLzApp {
             sendBackToAddress := mload(add(_srcAddress, 20))
         }
 
+        // uint16 srcChainId = _srcChainId;
+
         (uint256 _amountOfTokenSwapUSD, address _recieverAddress) = abi.decode(
             _payload,
             (uint256, address)
@@ -142,11 +149,29 @@ contract TokenBridgeHyper is Ownable, NonblockingLzApp {
      * @notice To get the price of the native asset
      * @param _amount - The amount of native token that needs to be swapped
      */
-    function _getAssetPrice(uint256 _amount) private returns (uint256) {
-        priceFeed = AggregatorV3Interface(priceFeedAddress);
-        (, int256 answer, , , ) = priceFeed.latestRoundData();
-        uint256 _price = uint256(answer * 100000000000);
-        return ((_price * _amount) / 10 ** 18);
+    function _getAssetPrice(uint256 _amount) private view returns (uint256) {
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            uniswapV3Factory.getPool(
+                stableAssetAddressUSDC,
+                wrappedAssetAddressNative,
+                POOL_FEE
+            )
+        );
+        (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
+        uint256 amount0 = FullMath.mulDiv(
+            pool.liquidity(),
+            FixedPoint96.Q96,
+            sqrtPriceX96
+        );
+        uint256 amount1 = FullMath.mulDiv(
+            pool.liquidity(),
+            sqrtPriceX96,
+            FixedPoint96.Q96
+        );
+        uint256 priceFromLiquidityPool = (amount1 *
+            10 ** ERC20(stableAssetAddressUSDC).decimals()) / amount0;
+
+        return _amount * priceFromLiquidityPool;
     }
 
     /**
