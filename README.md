@@ -2,6 +2,14 @@
 
 Hyper Token Bridge is a cross chain bridge that allows to swap native token to wrapped native on the other chain. For eg. I want to swap the native `BNB` token into `WMATIC` (or `ETH` into `WMATIC`) token on the polygon chain so hyper bridge can do that in a very less time.
 
+```sh
+DEPLOYED ADDRESSES :
+--------------------
+
+ETH GOERLI : 0x13A7413c7A15472460149F55d1f3F1465B1f7108
+POLYGON : 0xd2dbB4faB85478aF795c06bd36e5f7ed76D51fFe
+```
+
 ## How it works ?
 
 <img src="./docs/L0.png"></img>

@@ -190,4 +190,6 @@ contract TokenBridgeHyper is Ownable, NonblockingLzApp {
         (bool success, ) = msg.sender.call{value: balance}("");
         require(success, "Withdraw Failed !!!");
     }
+
+    receive() external payable {}
 }

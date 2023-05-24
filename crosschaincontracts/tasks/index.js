@@ -1,1 +1,1 @@
-task("getContractBalance", "", require("./GetContractBalance"));
+task("getContractBalance", "", require("./GetContractBalance"))
