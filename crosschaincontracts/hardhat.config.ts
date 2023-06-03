@@ -16,6 +16,8 @@ const config: HardhatUserConfig = {
     mumbai: {
       url: process.env.POL_MUMBAI_RPC_URL,
       accounts: [PRIVATE_KEY],
+      gas: 2100000,
+      gasPrice: 250000000000,
     },
   },
 };
